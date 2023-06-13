@@ -8,3 +8,8 @@ html,
 body {
 	overflow: hidden;
 }
+
+canvas {
+	position: fixed;
+	inset: 0;
+}
