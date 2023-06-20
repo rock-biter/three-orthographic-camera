@@ -2,22 +2,6 @@ import './style.css'
 import * as THREE from 'three'
 
 /**
- * mouse
- */
-const mouse = new THREE.Vector2()
-const prevMouse = new THREE.Vector2()
-let drag = false
-
-const dampingMouse = new THREE.Vector2()
-let dampingFactor = 0.05
-
-/**
- * Zoom
- */
-let zoomFactor = 0
-let zoomSpeed = 0.25
-
-/**
  * Scene
  */
 const scene = new THREE.Scene()
@@ -31,6 +15,25 @@ const geometry = new THREE.BoxGeometry(1, 1, 1)
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
 
+const moon = mesh.clone()
+moon.scale.multiplyScalar(0.25)
+
+// scene.add(moon)
+
+/**
+ * Mouse
+ */
+
+const mouse = new THREE.Vector2(0, 0)
+const prevMouse = new THREE.Vector2(0, 0)
+let drag = false
+
+const dumpingMouse = new THREE.Vector2()
+let dumpingFactor = 0.05
+
+let zoomFactor = 0
+let zoomSpeed = 0.25
+
 /**
  * render sizes
  */
@@ -43,7 +46,7 @@ const sizes = {
  */
 const fov = 60
 const camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1)
-camera.position.set(0, 0, 4)
+camera.position.set(0, 0, 8)
 
 /**
  * renderer
@@ -68,6 +71,8 @@ document.body.appendChild(renderer.domElement)
  */
 const clock = new THREE.Clock()
 
+// let R = 4
+
 /**
  * frame loop
  */
@@ -80,26 +85,25 @@ function tic() {
 	 * tempo totale trascorso dall'inizio
 	 */
 	// const time = clock.getElapsedTime()
+	// const angle = -mouse.y * Math.PI * 0.5
 
-	dampingMouse.lerp(mouse, dampingFactor)
+	// camera.position.y = R * Math.sin(angle)
+	// camera.position.z = R * Math.cos(angle)
+	let R = 4 //+ zoomFactor * 2
 
-	const angleA = -dampingMouse.x * Math.PI
-	const angleB = (dampingMouse.y * 0.5 + 0.5) * Math.PI
-	const radius = 4 //+ zoomFactor * 2
+	dumpingMouse.lerp(mouse, dumpingFactor)
 
-	// camera.fov = fov + zoomFactor * 30
-	// camera.updateProjectionMatrix()
+	const angleA = -dumpingMouse.x * Math.PI
+	const angleB = (dumpingMouse.y * 0.5 + 0.5) * Math.PI
 
-	camera.zoom = 1 + zoomFactor * 0.5
-	camera.updateProjectionMatrix()
-
-	const pos = new THREE.Vector3().setFromSphericalCoords(radius, angleB, angleA)
-
-	// camera.position.y = 4 * Math.sin(angle)
-	// camera.position.z = 4 * Math.cos(angle)
+	const pos = new THREE.Vector3().setFromSphericalCoords(R, angleB, angleA)
 	camera.position.copy(pos)
 
-	camera.lookAt(mesh.position)
+	camera.lookAt(0, 0, 0)
+
+	// camera.fov = fov + zoomFactor * 30
+	camera.zoom = 1 + zoomFactor * 0.5
+	camera.updateProjectionMatrix()
 
 	renderer.render(scene, camera)
 
@@ -111,7 +115,7 @@ requestAnimationFrame(tic)
 window.addEventListener('resize', onResize)
 
 function onResize() {
-	console.log('resize')
+	// console.log('resize')
 	sizes.width = window.innerWidth
 	sizes.height = window.innerHeight
 
@@ -124,45 +128,44 @@ function onResize() {
 	renderer.setPixelRatio(pixelRatio)
 }
 
-window.addEventListener('mousemove', (event) => {
-	// print mouse coordinates inside window
-	// console.log(event.clientX, event.clientY)
+window.addEventListener('mousemove', onMouseMove)
+
+function onMouseMove(event) {
+	// mouse.x = (2 * event.clientX) / window.innerWidth - 1
+	// mouse.y = (-2 * event.clientY) / window.innerHeight + 1
 
 	if (drag) {
+		console.log('drag anb drop ON')
+
 		const currentMouse = new THREE.Vector2(
 			(2 * event.clientX) / window.innerWidth - 1,
 			(-2 * event.clientY) / window.innerHeight + 1
 		)
+
 		const diff = currentMouse.clone().sub(prevMouse)
 
 		mouse.add(diff)
-		mouse.y = THREE.MathUtils.clamp(mouse.y, -0.999, 0.999)
-		// mouse.x = (2 * diff.x) / window.innerWidth - 1
-		// mouse.y = (-2 * diff.y) / window.innerHeight + 1
-		// print normalized mouse coordinates
-		// console.log(mouse.x, mouse.y)
+		mouse.y = THREE.MathUtils.clamp(mouse.y, -1, 1)
 
 		prevMouse.copy(currentMouse)
 	}
-})
+}
 
-window.addEventListener('wheel', (event) => {
-	// print the delta Y scroll amount
-	console.log(event.deltaY)
-	zoomFactor += (zoomSpeed * event.deltaY) / 1000
-
-	zoomFactor = THREE.MathUtils.clamp(zoomFactor, -1, 1)
-})
-
-window.addEventListener('mousedown', (event) => {
-	// set mouse starting position
+window.addEventListener('mousedown', function (event) {
 	prevMouse.x = (2 * event.clientX) / window.innerWidth - 1
 	prevMouse.y = (-2 * event.clientY) / window.innerHeight + 1
-	// start drag
+
 	drag = true
 })
 
-window.addEventListener('mouseup', () => {
-	// end drag
+window.addEventListener('mouseup', function () {
 	drag = false
+})
+
+window.addEventListener('wheel', function (event) {
+	// console.log(event.deltaY)
+
+	zoomFactor += (zoomSpeed * event.deltaY) / 1000
+	zoomFactor = THREE.MathUtils.clamp(zoomFactor, -1, 1)
+	console.log(zoomFactor)
 })
