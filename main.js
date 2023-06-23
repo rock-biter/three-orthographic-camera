@@ -44,9 +44,21 @@ const sizes = {
 /**
  * Camera
  */
-const fov = 60
-const camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1)
-camera.position.set(0, 0, 8)
+// const fov = 60
+let aspect = sizes.width / sizes.height
+// const camera = new THREE.PerspectiveCamera(fov, sizes.width / sizes.height, 0.1)
+const f = 2
+const camera = new THREE.OrthographicCamera(
+	-f * aspect,
+	f * aspect,
+	f,
+	-f,
+	0.1,
+	100
+)
+camera.position.set(5, 5, 8)
+
+camera.lookAt(0, 0, 0)
 
 /**
  * renderer
@@ -93,6 +105,15 @@ function tic() {
 
 	dumpingMouse.lerp(mouse, dumpingFactor)
 
+	// const f = 2 + 1 * zoomFactor
+
+	// camera.left = -f * aspect
+	// camera.right = f * aspect
+	// camera.top = f
+	// camera.bottom = -f
+
+	// camera.updateProjectionMatrix()
+
 	const angleA = -dumpingMouse.x * Math.PI
 	const angleB = (dumpingMouse.y * 0.5 + 0.5) * Math.PI
 
@@ -102,7 +123,7 @@ function tic() {
 	camera.lookAt(0, 0, 0)
 
 	// camera.fov = fov + zoomFactor * 30
-	camera.zoom = 1 + zoomFactor * 0.5
+	camera.zoom = 1 - zoomFactor * 0.5
 	camera.updateProjectionMatrix()
 
 	renderer.render(scene, camera)
@@ -119,7 +140,12 @@ function onResize() {
 	sizes.width = window.innerWidth
 	sizes.height = window.innerHeight
 
-	camera.aspect = sizes.width / sizes.height
+	aspect = sizes.width / sizes.height
+
+	camera.left = -f * aspect
+	camera.right = f * aspect
+
+	// camera.aspect = sizes.width / sizes.height
 	camera.updateProjectionMatrix()
 
 	renderer.setSize(sizes.width, sizes.height)
